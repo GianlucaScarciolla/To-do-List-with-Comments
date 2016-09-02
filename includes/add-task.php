@@ -1,22 +1,23 @@
 <?php 
+	require("connect.php");
+
 	$task 		= strip_tags( $_POST['task'] );
 	$comment	= strip_tags( $_POST['comment'] );
 	$date 		= date('Y-m-d');
 	$time 		= date('H:i:s');
-	echo $task.$comment;
-	require("connect.php");
 
-	mysqli_query($conn, "INSERT INTO tasks VALUES ('', '$task', '$date', '$time', '$comment')");
+	// Prepared insert statement
+	$sql = "INSERT INTO tasks (task,date,time,comment) VALUES (?,?,?,?)";
+	$statement = mysqli_stmt_init($conn);
 
-	$query = mysqli_query($conn, "SELECT * FROM tasks WHERE task='$task' and date='$date' and time='$time' and comment='$comment'");
-
-	while( $row = mysqli_fetch_assoc($query) ){
-		$task_id = $row['id'];
-		$task_name = $row['task'];
-		$comment_text = $row['comment'];
+	if(mysqli_stmt_prepare($statement, $sql)) {
+		mysqli_stmt_bind_param($statement, "ssss", $task, $date, $time, $comment);
+		mysqli_stmt_execute($statement);
+		mysqli_stmt_close($statement);
+	} else {
+		mysqli_close($conn);
+		die("MySQLi: Statement preparation failed.");
 	}
-
+	
 	mysqli_close($conn);
-
-	echo '<li><span>'.$task_name.'</span><img id="'.$task_id.'" class="delete-button" width="10px" src="images/close.svg" /><span>'.$comment_text.'</span></li>';
 ?>
